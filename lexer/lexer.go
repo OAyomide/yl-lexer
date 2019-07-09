@@ -120,6 +120,8 @@ func (lex *Lexer) NextToken() token.Token {
 		} else {
 			tokn = createNewToken(token.GT, lex.character)
 		}
+	case '%':
+		tokn = createNewToken(token.PERC, lex.character)
 	case '0':
 		tokn.Type = token.EOF // end of the file/input
 		tokn.Literal = ""     // empty string

@@ -31,6 +31,7 @@ const (
 	LT_OR_EQ = "<="
 	INCR     = "++"
 	DECR     = "--"
+	PERC     = "%"
 
 	// delimters
 	COMMA      = ","
