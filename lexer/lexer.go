@@ -4,9 +4,9 @@ import "github.com/oayomide/chi/token"
 
 type Lexer struct {
 	input             string
-	tokenPosition     int
-	character         byte
-	readTokenPosition int
+	lexerPosition     int
+	column            int
+	line              int
 }
 
 func New(input string) *Lexer {
@@ -16,21 +16,40 @@ func New(input string) *Lexer {
 	return lex
 }
 
-func (lex *Lexer) readInputCharacter() {
-	// first, check if we have read everythin in the input string
-	if lex.readTokenPosition >= len(lex.input) {
-		lex.character = 0
-	} else {
-		// the read character/token is at the position of the index`lex.readTokenPosition` on the input string.
-		// E.g input string is Ade. position of d in Ade is: [1] where an array/slice starts from 0 and 1 is the `lex.readTokenPosition`
-		// to simply put, the postion of the current token in the input string
-		lex.character = lex.input[lex.readTokenPosition]
+// check lexer position is yet to exceed input length
+func (lex *Lexer) isBound() boolv{
+	if lex.lexerPosition <= len(lex.input) {
+		return true
 	}
 
-	// the position of the current token is the position of the token
-	// we've read
-	lex.tokenPosition = lex.readTokenPosition
-	lex.readTokenPosition++ // increase the position by 1. i.e, continue to the next token in input string
+	return false
+}
+
+// peek character in current lexer position
+func (lex *Lexer) peekChar() string {
+
+	// check if we are yet to exceed input length
+	if lex.isBound() {
+		return lex.input[lex.lexerPosition]
+	} 
+
+	return ""
+}
+
+// consume character in current lexer position ans increment lexer position
+func (lex *Lexer) eatChar() string {
+	position := lex.lexerPosition
+
+	// check if we are yrt to exceed input length
+	if lex.isBound() {
+
+		// increment lexer position
+		lex.lexerPosition++
+		lex.column++
+		return lex.input[position]
+	}
+
+	return ""
 }
 
 // NextToken returns the next token in the input string
