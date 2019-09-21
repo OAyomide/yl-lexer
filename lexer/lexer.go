@@ -11,13 +11,13 @@ var input string =  ""
 var lexerPosition int = 0
 var column int = 0
 var line int = 1
-var digit_decimal string = "0123456789"
-var identifier_begin_char string = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-var identifier_end_char string = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789"
+var digitDecimal string = "0123456789"
+var identifierBeginChar string = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+var identifierEndChar string = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789"
 
 // check if lexer position is yet to exceed input length
 func isBound() bool {
-	if lexerPosition <= len(input) {
+	if lexerPosition < len(input) {
 		return true
 	}
 
@@ -57,11 +57,11 @@ func checkValidIdentifier() token.Token {
 	var tokens token.Token
 
 	// check if first character is a valid letter
-	if isBound() && strings.Contains(identifier_begin_char, peekChar()) {
+	if isBound() && strings.Contains(identifierBeginChar, peekChar()) {
 		identifier += eatChar()
 
 		// characeters after the first one can either be a letter or a digit
-		for isBound() && strings.Contains(identifier_end_char, peekChar()) {
+		for isBound() && strings.Contains(identifierEndChar, peekChar()) {
 			identifier += eatChar()
 		}
 	}
@@ -74,9 +74,47 @@ func checkValidIdentifier() token.Token {
 	return token.Token{ "Unknown", identifier }
 }
 
+// check if series of characters are valid keyword
+func checkKeywordValid() token.Token {
+	keyword := ""
+	var tokens token.Token
+
+	// check if first character is a valid letter
+	for isBound() && strings.Contains(identifierBeginChar, peekChar()) {
+		keyword += eatChar()
+	}
+
+	if token.LookUpKeyword(keyword) {
+		tokens = token.Token{ token.KEYWORD, keyword }
+		return tokens
+	}
+
+	return token.Token{ token.UNKNOWN, keyword }
+}
+
+
+// check if series of characters are valid boolean
+func checkBooleanValid() token.Token {
+	boolean := ""
+	var tokens token.Token
+
+	// check if first character is a valid letter
+	for isBound() && strings.Contains(identifierBeginChar, peekChar()) {
+		boolean += eatChar()
+	}
+
+	if token.LookUpBoolean(boolean) {
+		tokens = token.Token{ token.BOOLEAN, boolean }
+		return tokens
+	}
+
+	return token.Token{ token.UNKNOWN, boolean }
+}
+
+// Lex -> run all lexer functions
 func Lex(code string) token.Token {
 	input = code
-	return checkValidIdentifier()
+	return checkBooleanValid()
 } 
 
 /**
