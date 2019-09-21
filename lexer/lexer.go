@@ -1,6 +1,6 @@
 package lexer
 
-import "github.com/oayomide/chi/token"
+// import "github.com/oayomide/chi/token"
 
 type Lexer struct {
 	input             string
@@ -9,15 +9,19 @@ type Lexer struct {
 	line              int
 }
 
+// TODO: move to token file
+type Token struct {
+	Type    TokenType
+	Literal string
+}
+
 func New(input string) *Lexer {
 	lex := &Lexer{input: input}
-	// then we want to read the character
-	lex.readInputCharacter()
 	return lex
 }
 
-// check lexer position is yet to exceed input length
-func (lex *Lexer) isBound() boolv{
+// check if lexer position is yet to exceed input length
+func (lex *Lexer) isBound() bool {
 	if lex.lexerPosition <= len(lex.input) {
 		return true
 	}
@@ -50,6 +54,29 @@ func (lex *Lexer) eatChar() string {
 	}
 
 	return ""
+}
+
+// check if series of characters are valid identifiers
+func (lex *Lexer) checkValidIdentifier() Token {
+	identifier := ""
+	var token Token
+
+	// check if first character is a valid letter
+	if lex.isBound() && isLetter(lex.peekChar()) {
+		identifier += lex.eatChar()
+
+		// characeters after the first one can either be a letter or a digit
+		for lex.isBound() && (isLetter(lex.peekChar()) || isDigit(lex.peekChar()) {
+			identifier += lex.eatChar()
+		}
+	}
+
+	if len(identifier) > 0 {
+		token = Token{ "Identifier", identifier }
+		return token
+	}
+
+	return Token{ "Unknown", identifier }
 }
 
 // NextToken returns the next token in the input string
