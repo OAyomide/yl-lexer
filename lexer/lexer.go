@@ -1,28 +1,23 @@
-package lexer
+package lex
 
+import "strings"
+// mport "fmt"
+import "../token"
+
+// there should be a way to import fikes locally
 // import "github.com/oayomide/chi/token"
 
-type Lexer struct {
-	input             string
-	lexerPosition     int
-	column            int
-	line              int
-}
-
-// TODO: move to token file
-type Token struct {
-	Type    TokenType
-	Literal string
-}
-
-func New(input string) *Lexer {
-	lex := &Lexer{input: input}
-	return lex
-}
+var input string =  ""               
+var lexerPosition int = 0
+var column int = 0
+var line int = 1
+var digit_decimal string = "0123456789"
+var identifier_begin_char string = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+var identifier_end_char string = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789"
 
 // check if lexer position is yet to exceed input length
-func (lex *Lexer) isBound() bool {
-	if lex.lexerPosition <= len(lex.input) {
+func isBound() bool {
+	if lexerPosition <= len(input) {
 		return true
 	}
 
@@ -30,57 +25,63 @@ func (lex *Lexer) isBound() bool {
 }
 
 // peek character in current lexer position
-func (lex *Lexer) peekChar() string {
+func peekChar() string {
 
 	// check if we are yet to exceed input length
-	if lex.isBound() {
-		return lex.input[lex.lexerPosition]
+	if isBound() {
+		return string(input[lexerPosition])
 	} 
 
 	return ""
 }
 
 // consume character in current lexer position ans increment lexer position
-func (lex *Lexer) eatChar() string {
-	position := lex.lexerPosition
+func eatChar() string {
+	position := lexerPosition
 
 	// check if we are yrt to exceed input length
-	if lex.isBound() {
+	if isBound() {
 
 		// increment lexer position
-		lex.lexerPosition++
-		lex.column++
-		return lex.input[position]
+		lexerPosition++
+		column++
+		return string(input[position])
 	}
 
 	return ""
 }
 
 // check if series of characters are valid identifiers
-func (lex *Lexer) checkValidIdentifier() Token {
+func checkValidIdentifier() token.Token {
 	identifier := ""
-	var token Token
+	var tokens token.Token
 
 	// check if first character is a valid letter
-	if lex.isBound() && isLetter(lex.peekChar()) {
-		identifier += lex.eatChar()
+	if isBound() && strings.Contains(identifier_begin_char, peekChar()) {
+		identifier += eatChar()
 
 		// characeters after the first one can either be a letter or a digit
-		for lex.isBound() && (isLetter(lex.peekChar()) || isDigit(lex.peekChar()) {
-			identifier += lex.eatChar()
+		for isBound() && strings.Contains(identifier_end_char, peekChar()) {
+			identifier += eatChar()
 		}
 	}
 
 	if len(identifier) > 0 {
-		token = Token{ "Identifier", identifier }
-		return token
+		tokens = token.Token{ "Identifier", identifier }
+		return tokens
 	}
 
-	return Token{ "Unknown", identifier }
+	return token.Token{ "Unknown", identifier }
 }
 
+func Lex(code string) token.Token {
+	input = code
+	return checkValidIdentifier()
+} 
+
+/**
 // NextToken returns the next token in the input string
-func (lex *Lexer) NextToken() token.Token {
+func (lex *Lexer) NextToken() Token {
 	var tokn token.Token
 
 	lex.eatWhiteSpace()
@@ -259,3 +260,4 @@ func (lex *Lexer) readIdentifier() string {
 	// NB: will word this better later.. caffeined up right now
 	return lex.input[position:lex.tokenPosition]
 }
+**/
