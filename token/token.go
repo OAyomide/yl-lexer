@@ -60,19 +60,26 @@ const (
 // Note make sure u give the exact number of token in array,
 // else you gonna spend ages debugging invain
 // Total_time_wasted = 2hours
-var keywords = [7]string {
-	"fun",
-	"let",
-	"true",
-	"false",
-	"if",
-	"else",
-	"return",
+var keywords = [14]string {
+	"jeki", // LET
+    "nigbati",
+    "sope",
+    "tabi", // IF
+    "ise",
+    "fun",
+    "pada", // RETURN
+    "kuro",
+    "se",
+    "yi",
+    "iru",
+    "padasi",
+    "gbewole", // IMPORT
+    "woke",
 }
 
 var boolean = [2]string {
-	"true",
-	"false",
+	"ooto", // TRUE
+	"iro", // FALSE
 }
 
 // LookUpKeyword -> checks if series of character are valid keyword
