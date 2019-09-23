@@ -18,7 +18,7 @@ const (
 	INTEGER  = "INTEGER"
 
 	// operators
-	OPERATOR = "OPERATORS"
+	OPERATOR = "OPERATOR"
 	// ASSIGN   = "="
 	// PLUS     = "+"
 	// SUBTRACT = "-"
@@ -36,7 +36,7 @@ const (
 	// MODULO   = "%"
 
 	// delimters
-	SEPARATOR  = "SEPARATORS"
+	SEPARATOR  = "SEPARATOR"
 	// COMMA      = ","
 	// SEMICOLON  = ";"
 	// LEFTPAREN  = "("
@@ -45,7 +45,7 @@ const (
 	// RIGHTBRACE = "}"
 
 	// keywords
-	KEYWORD = "KEYWORDS"
+	KEYWORD = "KEYWORD"
 	// FUNCTION = "FUN" 
 	// LET      = "LET"
 	// TRUE     = "TRUE"
@@ -57,7 +57,10 @@ const (
 	SPACE    =  "SPACE"
 )
 
-var keywords = [20]string {
+// Note make sure u give the exact number of token in array,
+// else you gonna spend ages debugging invain
+// Total_time_wasted = 2hours
+var keywords = [7]string {
 	"fun",
 	"let",
 	"true",

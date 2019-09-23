@@ -1,7 +1,7 @@
 package lex
 
 import "strings"
-// mport "fmt"
+// import "fmt"
 import "../token"
 
 // there should be a way to import fikes locally
@@ -14,6 +14,9 @@ var line int = 1
 var digitDecimal string = "0123456789"
 var identifierBeginChar string = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 var identifierEndChar string = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789"
+var operatorChar = "+-/=*%"
+var separatorChar = "{}[]<>();,"
+var spaceChar = " "
 
 // check if lexer position is yet to exceed input length
 func isBound() bool {
@@ -51,6 +54,11 @@ func eatChar() string {
 	return ""
 }
 
+// revert lexer position if lexer method does not identify character
+func revert(position int) {
+	lexerPosition = position
+}
+
 // check if series of characters are valid identifiers
 func checkValidIdentifier() token.Token {
 	identifier := ""
@@ -59,7 +67,7 @@ func checkValidIdentifier() token.Token {
 	// check if first character is a valid letter
 	if isBound() && strings.Contains(identifierBeginChar, peekChar()) {
 		identifier += eatChar()
-
+		
 		// characeters after the first one can either be a letter or a digit
 		for isBound() && strings.Contains(identifierEndChar, peekChar()) {
 			identifier += eatChar()
@@ -67,17 +75,18 @@ func checkValidIdentifier() token.Token {
 	}
 
 	if len(identifier) > 0 {
-		tokens = token.Token{ "Identifier", identifier }
+		tokens = token.Token{ token.IDENTIFIER, identifier }
 		return tokens
 	}
 
-	return token.Token{ "Unknown", identifier }
+	return token.Token{ token.UNKNOWN, identifier }
 }
 
 // check if series of characters are valid keyword
 func checkKeywordValid() token.Token {
 	keyword := ""
 	var tokens token.Token
+	position := lexerPosition
 
 	// check if first character is a valid letter
 	for isBound() && strings.Contains(identifierBeginChar, peekChar()) {
@@ -89,6 +98,7 @@ func checkKeywordValid() token.Token {
 		return tokens
 	}
 
+	revert(position)
 	return token.Token{ token.UNKNOWN, keyword }
 }
 
@@ -96,6 +106,7 @@ func checkKeywordValid() token.Token {
 // check if series of characters are valid boolean
 func checkBooleanValid() token.Token {
 	boolean := ""
+	position := lexerPosition
 	var tokens token.Token
 
 	// check if first character is a valid letter
@@ -108,14 +119,114 @@ func checkBooleanValid() token.Token {
 		return tokens
 	}
 
+	revert(position)
 	return token.Token{ token.UNKNOWN, boolean }
 }
 
-// Lex -> run all lexer functions
-func Lex(code string) token.Token {
-	input = code
-	return checkBooleanValid()
+// check if character is a valid operator
+func checkOperatorValid() token.Token {
+	operator := ""
+	var tokens token.Token
+
+	if isBound() && strings.Contains(operatorChar, peekChar()) {
+		operator += eatChar()
+	}
+
+	if len(operator) > 0 {
+		tokens = token.Token{ token.OPERATOR, operator }
+		return tokens
+	}
+
+	return token.Token{ token.UNKNOWN, operator }
+}
+
+// check if character is a valid separator
+func checkSeparatorValid() token.Token {
+	separator := ""
+	var tokens token.Token
+
+	if isBound() && strings.Contains(separatorChar, peekChar()) {
+		separator += eatChar()
+	}
+
+	if len(separator) > 0 {
+		tokens = token.Token{ token.SEPARATOR, separator }
+		return tokens
+	}
+
+	return token.Token{ token.UNKNOWN, separator }
+}
+
+// check if character is a valid space
+func checkSpaceValid() token.Token {
+	space := ""
+	var tokens token.Token
+
+	for isBound() && peekChar() == " " || peekChar() == "\t" {
+		space += eatChar()
+	}
+
+	if len(space) > 0 {
+		tokens = token.Token{ token.SPACE, space }
+		return tokens
+	}
+
+	return token.Token{ token.UNKNOWN, space }
+}
+
+
+
+
+// run all lexer functions
+func lexNext() token.Token {
+
+	var boolean = checkBooleanValid()
+    if boolean.Type != token.UNKNOWN {
+        return boolean
+	}
+
+	var keyword = checkKeywordValid()
+    if keyword.Type != token.UNKNOWN {
+        return keyword
+	}
+	
+	var identifier = checkValidIdentifier()
+    if identifier.Type != token.UNKNOWN {
+        return identifier
+	}
+
+	var space = checkSpaceValid()
+    if space.Type != token.UNKNOWN {
+        return space
+	}
+
+	var operator = checkOperatorValid()
+    if operator.Type != token.UNKNOWN {
+        return operator
+	}
+
+	var separator = checkSeparatorValid()
+    if separator.Type != token.UNKNOWN {
+        return separator
+	}
+
+	return token.Token{ token.UNKNOWN, eatChar() }
 } 
+
+// Lex -> run lexNext function
+func Lex(code string) []token.Token {
+	input = code
+
+	var tokens []token.Token
+	for isBound() {
+		temp := lexNext()
+
+		if temp.Type != token.UNKNOWN {
+			tokens = append(tokens, temp)
+		}
+	}
+	return tokens
+}
 
 /**
 // NextToken returns the next token in the input string
