@@ -1,40 +1,236 @@
-package lexer
+package lex
 
-import "github.com/oayomide/chi/token"
+import "strings"
+// import "fmt"
+import "../token"
 
-type Lexer struct {
-	input             string
-	tokenPosition     int
-	character         byte
-	readTokenPosition int
-}
+// there should be a way to import fikes locally
+// import "github.com/oayomide/chi/token"
 
-func New(input string) *Lexer {
-	lex := &Lexer{input: input}
-	// then we want to read the character
-	lex.readInputCharacter()
-	return lex
-}
+var input string =  ""               
+var lexerPosition int = 0
+var column int = 0
+var line int = 1
+var digitDecimal string = "0123456789"
+var identifierBeginChar string = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+var identifierEndChar string = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789"
+var operatorChar = "+-/=*%"
+var separatorChar = "{}[]<>();,"
+var spaceChar = " "
 
-func (lex *Lexer) readInputCharacter() {
-	// first, check if we have read everythin in the input string
-	if lex.readTokenPosition >= len(lex.input) {
-		lex.character = 0
-	} else {
-		// the read character/token is at the position of the index`lex.readTokenPosition` on the input string.
-		// E.g input string is Ade. position of d in Ade is: [1] where an array/slice starts from 0 and 1 is the `lex.readTokenPosition`
-		// to simply put, the postion of the current token in the input string
-		lex.character = lex.input[lex.readTokenPosition]
+// check if lexer position is yet to exceed input length
+func isBound() bool {
+	if lexerPosition < len(input) {
+		return true
 	}
 
-	// the position of the current token is the position of the token
-	// we've read
-	lex.tokenPosition = lex.readTokenPosition
-	lex.readTokenPosition++ // increase the position by 1. i.e, continue to the next token in input string
+	return false
 }
 
+// peek character in current lexer position
+func peekChar() string {
+
+	// check if we are yet to exceed input length
+	if isBound() {
+		return string(input[lexerPosition])
+	} 
+
+	return ""
+}
+
+// consume character in current lexer position ans increment lexer position
+func eatChar() string {
+	position := lexerPosition
+
+	// check if we are yrt to exceed input length
+	if isBound() {
+
+		// increment lexer position
+		lexerPosition++
+		column++
+		return string(input[position])
+	}
+
+	return ""
+}
+
+// revert lexer position if lexer method does not identify character
+func revert(position int) {
+	lexerPosition = position
+}
+
+// check if series of characters are valid identifiers
+func checkValidIdentifier() token.Token {
+	identifier := ""
+	var tokens token.Token
+
+	// check if first character is a valid letter
+	if isBound() && strings.Contains(identifierBeginChar, peekChar()) {
+		identifier += eatChar()
+		
+		// characeters after the first one can either be a letter or a digit
+		for isBound() && strings.Contains(identifierEndChar, peekChar()) {
+			identifier += eatChar()
+		}
+	}
+
+	if len(identifier) > 0 {
+		tokens = token.Token{ token.IDENTIFIER, identifier }
+		return tokens
+	}
+
+	return token.Token{ token.UNKNOWN, identifier }
+}
+
+// check if series of characters are valid keyword
+func checkKeywordValid() token.Token {
+	keyword := ""
+	var tokens token.Token
+	position := lexerPosition
+
+	// check if first character is a valid letter
+	for isBound() && strings.Contains(identifierBeginChar, peekChar()) {
+		keyword += eatChar()
+	}
+
+	if token.LookUpKeyword(keyword) {
+		tokens = token.Token{ token.KEYWORD, keyword }
+		return tokens
+	}
+
+	revert(position)
+	return token.Token{ token.UNKNOWN, keyword }
+}
+
+
+// check if series of characters are valid boolean
+func checkBooleanValid() token.Token {
+	boolean := ""
+	position := lexerPosition
+	var tokens token.Token
+
+	// check if first character is a valid letter
+	for isBound() && strings.Contains(identifierBeginChar, peekChar()) {
+		boolean += eatChar()
+	}
+
+	if token.LookUpBoolean(boolean) {
+		tokens = token.Token{ token.BOOLEAN, boolean }
+		return tokens
+	}
+
+	revert(position)
+	return token.Token{ token.UNKNOWN, boolean }
+}
+
+// check if character is a valid operator
+func checkOperatorValid() token.Token {
+	operator := ""
+	var tokens token.Token
+
+	if isBound() && strings.Contains(operatorChar, peekChar()) {
+		operator += eatChar()
+	}
+
+	if len(operator) > 0 {
+		tokens = token.Token{ token.OPERATOR, operator }
+		return tokens
+	}
+
+	return token.Token{ token.UNKNOWN, operator }
+}
+
+// check if character is a valid separator
+func checkSeparatorValid() token.Token {
+	separator := ""
+	var tokens token.Token
+
+	if isBound() && strings.Contains(separatorChar, peekChar()) {
+		separator += eatChar()
+	}
+
+	if len(separator) > 0 {
+		tokens = token.Token{ token.SEPARATOR, separator }
+		return tokens
+	}
+
+	return token.Token{ token.UNKNOWN, separator }
+}
+
+// check if character is a valid space
+func checkSpaceValid() token.Token {
+	space := ""
+	var tokens token.Token
+
+	for isBound() && peekChar() == " " || peekChar() == "\t" {
+		space += eatChar()
+	}
+
+	if len(space) > 0 {
+		tokens = token.Token{ token.SPACE, space }
+		return tokens
+	}
+
+	return token.Token{ token.UNKNOWN, space }
+}
+
+
+
+
+// run all lexer functions
+func lexNext() token.Token {
+
+	var boolean = checkBooleanValid()
+    if boolean.Type != token.UNKNOWN {
+        return boolean
+	}
+
+	var keyword = checkKeywordValid()
+    if keyword.Type != token.UNKNOWN {
+        return keyword
+	}
+	
+	var identifier = checkValidIdentifier()
+    if identifier.Type != token.UNKNOWN {
+        return identifier
+	}
+
+	var space = checkSpaceValid()
+    if space.Type != token.UNKNOWN {
+        return space
+	}
+
+	var operator = checkOperatorValid()
+    if operator.Type != token.UNKNOWN {
+        return operator
+	}
+
+	var separator = checkSeparatorValid()
+    if separator.Type != token.UNKNOWN {
+        return separator
+	}
+
+	return token.Token{ token.UNKNOWN, eatChar() }
+} 
+
+// Lex -> run lexNext function
+func Lex(code string) []token.Token {
+	input = code
+
+	var tokens []token.Token
+	for isBound() {
+		temp := lexNext()
+
+		if temp.Type != token.UNKNOWN {
+			tokens = append(tokens, temp)
+		}
+	}
+	return tokens
+}
+
+/**
 // NextToken returns the next token in the input string
-func (lex *Lexer) NextToken() token.Token {
+func (lex *Lexer) NextToken() Token {
 	var tokn token.Token
 
 	lex.eatWhiteSpace()
@@ -213,3 +409,4 @@ func (lex *Lexer) readIdentifier() string {
 	// NB: will word this better later.. caffeined up right now
 	return lex.input[position:lex.tokenPosition]
 }
+**/
